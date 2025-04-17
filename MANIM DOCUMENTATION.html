@@ -1,0 +1,3177 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tài liệu Manim</title>
+    <!-- JavaScript for handling file data -->
+    <script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function loadFileData(filename) {
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row =>
+                        row.some(cell => cell !== '' && cell !== null && cell !== undefined)
+                    );
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData);
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
+                }
+            }
+            return gk_fileData[filename] || "";
+        }
+    </script>
+    <!-- Include highlight.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- Google Fonts for elegant typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Noto Serif', serif;
+            font-size: 18px;
+            line-height: 1.8;
+            color: #D8D8D8; /* Chữ trắng nhạt giống Claude */
+            background: #1A1B1E; /* Nền tối giống Claude */
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            background: #2A2D31; /* Container giống Claude */
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            margin-top: 100px;
+            margin-bottom: 40px;
+        }
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: #1A1B1E; /* Gradient giống Claude */
+            padding: 15px 0;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+        .navbar h1 {
+            margin: 0;
+            text-align: center;
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px;
+            color: #FFAB76; /* Cam pastel dịu hơn */
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Poppins', sans-serif;
+            color: #FFAB76; /* Cam pastel dịu hơn */
+            margin-bottom: 20px;
+            page-break-after: avoid;
+            break-after: avoid;
+        }
+        h1 { font-size: 36px; }
+        h2 { font-size: 28px; }
+        h3 { font-size: 24px; }
+        h4 { font-size: 20px; }
+        p {
+            margin-bottom: 20px;
+            page-break-inside: auto;
+            break-inside: auto;
+            orphans: 2;
+            widows: 2;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background: #2A2D31; /* Bảng giống Claude */
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: box-shadow 0.3s ease;
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        table:hover {
+            box-shadow: 0 6px 20px rgba(255, 171, 118, 0.3); /* Bóng đổ nhẹ với cam pastel */
+        }
+        td {
+            padding: 15px;
+            border: 1px solid #4a4a4a;
+            color: #D8D8D8;
+        }
+        pre, code {
+            font-family: 'Consolas', monospace;
+            font-size: 15px;
+            margin: 0;
+            color: #D8D8D8;
+            transition: box-shadow 0.3s ease;
+        }
+        pre {
+            white-space: pre-wrap;
+            background: #1A1B1E;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        pre:hover {
+            box-shadow: inset 0 0 5px rgba(255, 171, 118, 0.3);
+        }
+        .content-block {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-left: 2px solid #FFAB76; /* Viền cam pastel dịu hơn */
+            background: rgba(255, 171, 118, 0.03);
+            border-radius: 5px;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        @media print {
+            @page {
+                size: A4; /* Định dạng A4 (210mm x 297mm) */
+                margin: 1cm; /* Lề 1cm cho A4 */
+            }
+            body {
+                margin: 0;
+                background: none;
+                background-color: #1A1B1E;
+                font-size: 14px; /* Giảm font-size để phù hợp với A4 */
+                line-height: 1.6;
+            }
+            .container {
+                margin: 0;
+                padding: 20px;
+                box-shadow: none;
+                border-radius: 0;
+                background: #2A2D31;
+                width: 190mm; /* Chiều rộng tối đa cho A4 sau khi trừ lề */
+                min-height: 277mm; /* Chiều cao tối đa cho A4 sau khi trừ lề */
+                page-break-before: always;
+                page-break-after: always;
+            }
+            .navbar {
+                display: none !important;
+            }
+            h1, h2, h3, h4, h5, h6 {
+                page-break-before: auto;
+                page-break-after: avoid;
+                page-break-inside: avoid;
+                break-before: auto;
+                break-after: avoid;
+                break-inside: avoid;
+            }
+            p {
+                page-break-inside: auto;
+                break-inside: auto;
+                orphans: 2;
+                widows: 2;
+            }
+            table {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .content-block {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            .container > * {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Tài liệu Manim</h1>
+    </div>
+    <div class="container">
+        <h1>Tài liệu Manim (Viết lại)</h1>
+
+        <h2>1. Tổng quan về Manim</h2>
+        <p>Manim là một công cụ mã nguồn mở mạnh mẽ để tạo hoạt hình kỹ thuật, được phát triển bởi cộng đồng Manim Community (ManimCE), dựa trên phiên bản gốc của Grant Sanderson (3Blue1Brown). Manim sử dụng Python để lập trình hoạt hình, cho phép tạo ra các hình ảnh và video chính xác, phù hợp với giáo dục, khoa học và trình bày ý tưởng phức tạp.</p>
+
+        <h2>2. Cài đặt và kiểm tra môi trường</h2>
+        <h3>2.1. Cài đặt cơ bản</h3>
+        <div class="content-block">
+            <p>Yêu cầu: Python 3.7 trở lên và pip.<br>Sử dụng lệnh sau để cài đặt Manim:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">pip install manim</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>2.2. Kiểm tra phiên bản</h3>
+        <div class="content-block">
+            <p>Để xác nhận cài đặt thành công, chạy lệnh:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">manim --version</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>2.3. Cài LaTeX (Windows)</h3>
+        <div class="content-block">
+            <p>Cần thiết để hiển thị công thức toán học:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">winget install MiKTeX.MiKTeX</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>2.4. Cài FFmpeg (Windows)</h3>
+        <div class="content-block">
+            <p>Cần thiết để xuất video:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">winget install FFmpeg</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>2.5. Cài plugin voiceover (Tùy chọn)</h3>
+        <div class="content-block">
+            <p>Thêm giọng nói vào video:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">pip install manim-voiceover</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h2>3. Cấu trúc lập trình cơ bản</h2>
+        <h3>3.1. Mobject: Đối tượng hiển thị</h3>
+        <p>Mobject (Mathematical Object) là các đối tượng hiển thị trên màn hình, ví dụ: hình học như Circle, Square; văn bản như Text, Tex; hoặc đồ thị như Graph. Tất cả những gì bạn thấy trong video Manim đều là Mobject.</p>
+
+        <h3>3.2. Animation: Hiệu ứng chuyển động</h3>
+        <p>Animation điều khiển cách Mobject thay đổi, ví dụ: FadeIn (hiển thị mờ dần), Rotate (xoay), Transform (biến đổi). Chúng được áp dụng trong Scene thông qua phương thức <code>self.play()</code>.</p>
+
+        <h3>3.3. Scene: Không gian hoạt hình</h3>
+        <p>Scene là lớp chính để xây dựng hoạt hình. Bạn kế thừa từ Scene và định nghĩa phương thức <code>construct()</code> để tạo hoạt hình.</p>
+
+        <h3>3.4. Camera: Điều khiển góc nhìn</h3>
+        <p>Camera kiểm soát góc nhìn, ví dụ: zoom, xoay, hoặc di chuyển. Các loại Camera bao gồm MovingCamera, ThreeDCamera, MultiCamera.</p>
+
+        <h2>4. Mobjects chi tiết và cách code</h2>
+        <h3>4.1. Hình học cơ bản</h3>
+        <h4>4.1.1. Circle</h4>
+        <div class="content-block">
+            <p>Tạo một hình tròn với bán kính 1, màu xanh dương, độ mờ 0.5:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class CircleExample(Scene):
+    def construct(self):
+        circle = Circle(radius=1, color=BLUE, fill_opacity=0.5)
+        self.play(Create(circle))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.1.2. Square</h4>
+        <div class="content-block">
+            <p>Tạo một hình vuông với cạnh dài 2, màu đỏ, độ mờ 0.3:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class SquareExample(Scene):
+    def construct(self):
+        square = Square(side_length=2, color=RED, fill_opacity=0.3)
+        self.play(Create(square))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.1.3. Rectangle</h4>
+        <div class="content-block">
+            <p>Tạo hình chữ nhật với chiều rộng 3, chiều cao 2, màu xanh lá, độ mờ 0.4:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class RectangleExample(Scene):
+    def construct(self):
+        rectangle = Rectangle(width=3, height=2, color=GREEN, fill_opacity=0.4)
+        self.play(Create(rectangle))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.1.4. Polygon</h4>
+        <div class="content-block">
+            <p>Tạo đa giác tùy chỉnh với các đỉnh theo thứ tự UP, RIGHT, DOWN, LEFT, màu vàng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class PolygonExample(Scene):
+    def construct(self):
+        polygon = Polygon(UP, RIGHT, DOWN, LEFT, color=YELLOW)
+        self.play(Create(polygon))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.1.5. RegularPolygon</h4>
+        <div class="content-block">
+            <p>Tạo đa giác đều 5 cạnh với bán kính 1, màu cam:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class RegularPolygonExample(Scene):
+    def construct(self):
+        reg_polygon = RegularPolygon(n=5, radius=1, color=ORANGE)
+        self.play(Create(reg_polygon))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.1.6. ConvexHull</h4>
+        <div class="content-block">
+            <p>Tạo bao lồi từ 10 điểm ngẫu nhiên trong khoảng tọa độ (-3, 3):</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import numpy as np
+class ConvexHullExample(Scene):
+    def construct(self):
+        points = [Dot(np.array([np.random.uniform(-3, 3), np.random.uniform(-3, 3), 0])) for _ in range(10)]
+        hull = ConvexHull(*points)
+        self.add(*points)
+        self.play(Create(hull))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.1.7. Arc</h4>
+        <div class="content-block">
+            <p>Tạo cung tròn với bán kính 2, bắt đầu từ góc 0, dài π/2 radian, màu tím:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ArcExample(Scene):
+    def construct(self):
+        arc = Arc(radius=2, start_angle=0, angle=PI/2, color=PURPLE)
+        self.play(Create(arc))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.1.8. Line</h4>
+        <div class="content-block">
+            <p>Tạo đường thẳng từ điểm LEFT nhân 2 đến RIGHT nhân 2, màu trắng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class LineExample(Scene):
+    def construct(self):
+        line = Line(LEFT * 2, RIGHT * 2, color=WHITE)
+        self.play(Create(line))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.1.9. ArcBetweenPoints</h4>
+        <div class="content-block">
+            <p>Tạo cung giữa hai điểm (LEFT nhân 2 và RIGHT nhân 2) với góc π/4, màu xanh dương:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ArcBetweenPointsExample(Scene):
+    def construct(self):
+        start = Dot(LEFT * 2)
+        end = Dot(RIGHT * 2)
+        arc = ArcBetweenPoints(start.get_center(), end.get_center(), angle=PI/4, color=BLUE)
+        self.add(start, end)
+        self.play(Create(arc))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.2. Văn bản và công thức LaTeX</h3>
+        <h4>4.2.1. Text</h4>
+        <div class="content-block">
+            <p>Hiển thị văn bản đơn giản "Hello, Manim!" với màu trắng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TextExample(Scene):
+    def construct(self):
+        text = Text("Hello, Manim!", color=WHITE)
+        self.play(Write(text))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.2.2. Tex</h4>
+        <div class="content-block">
+            <p>Hiển thị công thức toán học đơn giản "E = mc^2" với màu vàng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TexExample(Scene):
+    def construct(self):
+        tex = Tex("E = mc^2", color=YELLOW)
+        self.play(Write(tex))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.2.3. MathTex</h4>
+        <div class="content-block">
+            <p>Hiển thị công thức toán học phức tạp (tổng từ n=1 đến vô cực của 1/n^2 = π^2/6) với màu xanh dương:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class MathTexExample(Scene):
+    def construct(self):
+        math_tex = MathTex(r"\sum_{n=1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}", color=BLUE)
+        self.play(Write(math_tex))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.2.4. MarkupText</h4>
+        <div class="content-block">
+            <p>Hiển thị văn bản với định dạng in đậm và in nghiêng, màu xanh lá:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class MarkupTextExample(Scene):
+    def construct(self):
+        markup = MarkupText("Bold and Italic", color=GREEN)
+        self.play(Write(markup))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.2.5. SingleStringMathTex</h4>
+        <div class="content-block">
+            <p>Hiển thị một chuỗi công thức toán học đơn giản (α + β = γ) với màu cam:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class SingleStringMathTexExample(Scene):
+    def construct(self):
+        single_tex = SingleStringMathTex(r"\alpha + \beta = \gamma", color=ORANGE)
+        self.play(Write(single_tex))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.2.6. Title</h4>
+        <div class="content-block">
+            <p>Tạo tiêu đề "Manim Tutorial" với màu trắng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TitleExample(Scene):
+    def construct(self):
+        title = Title("Manim Tutorial", color=WHITE)
+        self.play(Write(title))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.2.7. BulletedList</h4>
+        <div class="content-block">
+            <p>Tạo danh sách dấu đầu dòng với 3 mục, màu trắng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class BulletedListExample(Scene):
+    def construct(self):
+        bullet_list = BulletedList("Item 1", "Item 2", "Item 3", color=WHITE)
+        self.play(Write(bullet_list))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.3. Đám mây điểm và nhóm</h3>
+        <h4>4.3.1. Point</h4>
+        <div class="content-block">
+            <p>Tạo một điểm tại vị trí RIGHT nhân 2, màu đỏ:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class PointExample(Scene):
+    def construct(self):
+        point = Point(location=RIGHT * 2, color=RED)
+        self.play(FadeIn(point))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.3.2. PointCloudDot</h4>
+        <div class="content-block">
+            <p>Tạo đám mây điểm với tâm tại ORIGIN, bán kính 2, mật độ 100, màu xanh dương:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class PointCloudDotExample(Scene):
+    def construct(self):
+        cloud = PointCloudDot(center=ORIGIN, radius=2, density=100, color=BLUE)
+        self.play(FadeIn(cloud))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.3.3. PGroup</h4>
+        <div class="content-block">
+            <p>Nhóm 5 điểm ngẫu nhiên trong khoảng tọa độ (-3, 3):</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import numpy as np
+class PGroupExample(Scene):
+    def construct(self):
+        points = [Dot(np.array([np.random.uniform(-3, 3), np.random.uniform(-3, 3), 0])) for _ in range(5)]
+        pgroup = PGroup(*points)
+        self.play(FadeIn(pgroup))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.4. Hình học đặc biệt</h3>
+        <h4>4.4.1. RightAngle</h4>
+        <div class="content-block">
+            <p>Tạo góc vuông giữa hai đường thẳng (từ ORIGIN đến RIGHT và từ ORIGIN đến UP), màu vàng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class RightAngleExample(Scene):
+    def construct(self):
+        right_angle = RightAngle(Line(ORIGIN, RIGHT), Line(ORIGIN, UP), color=YELLOW)
+        self.play(Create(right_angle))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.2. Arrow</h4>
+        <div class="content-block">
+            <p>Tạo mũi tên từ LEFT nhân 2 đến RIGHT nhân 2, màu xanh lá:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ArrowExample(Scene):
+    def construct(self):
+        arrow = Arrow(LEFT * 2, RIGHT * 2, color=GREEN)
+        self.play(Create(arrow))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.3. Vector</h4>
+        <div class="content-block">
+            <p>Tạo vector từ ORIGIN đến RIGHT nhân 3, màu xanh dương:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class VectorExample(Scene):
+    def construct(self):
+        vector = Vector(RIGHT * 3, color=BLUE)
+        self.play(Create(vector))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.4. Elbow</h4>
+        <div class="content-block">
+            <p>Tạo góc gấp khúc với chiều rộng 0.5, góc π/2, màu đỏ:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ElbowExample(Scene):
+    def construct(self):
+        elbow = Elbow(width=0.5, angle=PI/2, color=RED)
+        self.play(Create(elbow))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.5. Annulus</h4>
+        <div class="content-block">
+            <p>Tạo vòng tròn rỗng với bán kính trong 0.5, bán kính ngoài 1, màu vàng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class AnnulusExample(Scene):
+    def construct(self):
+        annulus = Annulus(inner_radius=0.5, outer_radius=1, color=YELLOW)
+        self.play(Create(annulus))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.6. ArcPolygon</h4>
+        <div class="content-block">
+            <p>Tạo đa giác từ các cung với các đỉnh UP, RIGHT, DOWN, LEFT, màu tím:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ArcPolygonExample(Scene):
+    def construct(self):
+        points = [UP, RIGHT, DOWN, LEFT]
+        arc_poly = ArcPolygon(*points, color=PURPLE)
+        self.play(Create(arc_poly))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.7. ArcPolygonFromArcs</h4>
+        <div class="content-block">
+            <p>Tạo đa giác từ hai cung tròn với bán kính 1, mỗi cung dài π/2 radian, màu xanh dương:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ArcPolygonFromArcsExample(Scene):
+    def construct(self):
+        arc1 = Arc(radius=1, start_angle=0, angle=PI/2)
+        arc2 = Arc(radius=1, start_angle=PI/2, angle=PI/2)
+        arc_poly = ArcPolygonFromArcs(arc1, arc2, color=BLUE)
+        self.play(Create(arc_poly))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.8. Angle</h4>
+        <div class="content-block">
+            <p>Tạo góc giữa hai đường thẳng (từ ORIGIN đến RIGHT và từ ORIGIN đến UP), bán kính 0.5, màu cam:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class AngleExample(Scene):
+    def construct(self):
+        angle = Angle(Line(ORIGIN, RIGHT), Line(ORIGIN, UP), radius=0.5, color=ORANGE)
+        self.play(Create(angle))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.9. Star</h4>
+        <div class="content-block">
+            <p>Tạo hình ngôi sao 5 cánh với bán kính ngoài 1, màu vàng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class StarExample(Scene):
+    def construct(self):
+        star = Star(n=5, outer_radius=1, color=YELLOW)
+        self.play(Create(star))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.10. TangentLine</h4>
+        <div class="content-block">
+            <p>Tạo đường tiếp tuyến cho hình tròn bán kính 1 tại điểm alpha=0.25, dài 2, màu đỏ:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TangentLineExample(Scene):
+    def construct(self):
+        circle = Circle(radius=1)
+        tangent = TangentLine(circle, alpha=0.25, length=2, color=RED)
+        self.add(circle)
+        self.play(Create(tangent))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.11. Underline</h4>
+        <div class="content-block">
+            <p>Tạo gạch chân cho văn bản "Underlined Text", màu xanh dương:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class UnderlineExample(Scene):
+    def construct(self):
+        text = Text("Underlined Text")
+        underline = Underline(text, color=BLUE)
+        self.add(text)
+        self.play(Create(underline))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.12. CurvedArrow</h4>
+        <div class="content-block">
+            <p>Tạo mũi tên cong từ LEFT nhân 2 đến RIGHT nhân 2, bán kính 2, màu xanh lá:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TANGENT_LINEExample(Scene):
+    def construct(self):
+        circle = Circle(radius=1)
+        tangent = TangentLine(circle, alpha=0.25, length=2, color=RED)
+        self.add(circle)
+        self.play(Create(tangent))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.4.13. CurvedDoubleArrow</h4>
+        <div class="content-block">
+            <p>Tạo mũi tên cong hai đầu từ LEFT nhân 2 đến RIGHT nhân 2, bán kính 2, màu tím:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class CurvedDoubleArrowExample(Scene):
+    def construct(self):
+        arrow = CurvedDoubleArrow(LEFT * 2, RIGHT * 2, radius=2, color=PURPLE)
+        self.play(Create(arrow))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.5. Ma trận và bảng</h3>
+        <h4>4.5.1. Matrix</h4>
+        <div class="content-block">
+            <p>Tạo ma trận 2x2 với các phần tử 1, 2, 3, 4:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class MatrixExample(Scene):
+    def construct(self):
+        matrix = Matrix([[1, 2], [3, 4]])
+        self.play(Write(matrix))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.5.2. DecimalMatrix</h4>
+        <div class="content-block">
+            <p>Tạo ma trận 2x2 với các phần tử số thập phân 1.5, 2.3, 3.7, 4.2:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class DecimalMatrixExample(Scene):
+    def construct(self):
+        matrix = DecimalMatrix([[1.5, 2.3], [3.7, 4.2]])
+        self.play(Write(matrix))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.5.3. IntegerMatrix</h4>
+        <div class="content-block">
+            <p>Tạo ma trận 2x2 với các phần tử số nguyên 1, 2, 3, 4:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class IntegerMatrixExample(Scene):
+    def construct(self):
+        matrix = IntegerMatrix([[1, 2], [3, 4]])
+        self.play(Write(matrix))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.5.4. MobjectMatrix</h4>
+        <div class="content-block">
+            <p>Tạo ma trận 2x2 với các phần tử là các Dot:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class MobjectMatrixExample(Scene):
+    def construct(self):
+        elements = [[Dot(), Dot()], [Dot(), Dot()]]
+        matrix = MobjectMatrix(elements)
+        self.play(Write(matrix))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.5.5. Table</h4>
+        <div class="content-block">
+            <p>Tạo bảng 2x2 với các phần tử A, B, C, D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TableExample(Scene):
+    def construct(self):
+        table = Table([["A", "B"], ["C", "D"]])
+        self.play(Write(table))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.5.6. MathTable</h4>
+        <div class="content-block">
+            <p>Tạo bảng 2x2 với các phần tử x, y, 1, 2:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class MathTableExample(Scene):
+    def construct(self):
+        table = MathTable([["x", "y"], ["1", "2"]])
+        self.play(Write(table))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.5.7. DecimalTable</h4>
+        <div class="content-block">
+            <p>Tạo bảng 2x2 với các phần tử số thập phân 1.5, 2.3, 3.7, 4.2:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class DecimalTableExample(Scene):
+    def construct(self):
+        table = DecimalTable([[1.5, 2.3], [3.7, 4.2]])
+        self.play(Write(table))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.5.8. IntegerTable</h4>
+        <div class="content-block">
+            <p>Tạo bảng 2x2 với các phần tử số nguyên 1, 2, 3, 4:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class IntegerTableExample(Scene):
+    def construct(self):
+        table = IntegerTable([[1, 2], [3, 4]])
+        self.play(Write(table))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.6. Đồ thị</h3>
+        <h4>4.6.1. Graph</h4>
+        <div class="content-block">
+            <p>Tạo đồ thị với 4 đỉnh và 4 cạnh tạo thành chu trình, bố cục hình tròn, có nhãn:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class GraphExample(Scene):
+    def construct(self):
+        graph = Graph([1, 2, 3, 4], [(1, 2), (2, 3), (3, 4), (4, 1)], layout="circular", labels=True)
+        self.play(Create(graph))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.6.2. DiGraph</h4>
+        <div class="content-block">
+            <p>Tạo đồ thị có hướng với 3 đỉnh và 3 cạnh tạo thành chu trình, bố cục hình tròn, có nhãn:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class DiGraphExample(Scene):
+    def construct(self):
+        digraph = DiGraph([1, 2, 3], [(1, 2), (2, 3), (3, 1)], layout="circular", labels=True)
+        self.play(Create(digraph))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.6.3. GenericGraph</h4>
+        <div class="content-block">
+            <p>Tạo đồ thị tổng quát với 3 đỉnh và 2 cạnh, bố cục spring, có nhãn:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class GenericGraphExample(Scene):
+    def construct(self):
+        graph = GenericGraph([1, 2, 3], [(1, 2), (2, 3)], layout="spring", labels=True)
+        self.play(Create(graph))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.6.4. NxGraph (Tích hợp với NetworkX)</h4>
+        <div class="content-block">
+            <p>Tạo đồ thị từ NetworkX với 4 đỉnh tạo thành chu trình, bố cục hình tròn, có nhãn:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import networkx as nx
+class NxGraphExample(Scene):
+    def construct(self):
+        G = nx.cycle_graph(4)
+        graph = Graph.from_networkx(G, layout="circular", labels=True)
+        self.play(Create(graph))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.6.5. LayoutFunction</h4>
+        <div class="content-block">
+            <p>Tạo đồ thị với 4 đỉnh và 4 cạnh tạo thành chu trình, bố cục tùy chỉnh theo hàm cos và sin, có nhãn:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import numpy as np
+class LayoutFunctionExample(Scene):
+    def construct(self):
+        vertices = [1, 2, 3, 4]
+        edges = [(1, 2), (2, 3), (3, 4), (4, 1)]
+        layout = {v: [np.cos(i * PI/2), np.sin(i * PI/2), 0] for i, v in enumerate(vertices)}
+        graph = Graph(vertices, edges, layout=layout, labels=True)
+        self.play(Create(graph))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.7. 3D Mobjects</h3>
+        <h4>4.7.1. Cube</h4>
+        <div class="content-block">
+            <p>Tạo khối lập phương với cạnh dài 1, màu xanh dương, độ mờ 0.5, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class CubeExample(ThreeDScene):
+    def construct(self):
+        cube = Cube(side_length=1, fill_color=BLUE, fill_opacity=0.5)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(cube))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.2. Sphere</h4>
+        <div class="content-block">
+            <p>Tạo hình cầu với bán kính 1, màu đỏ, độ mờ 0.5, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class SphereExample(ThreeDScene):
+    def construct(self):
+        sphere = Sphere(radius=1, fill_color=RED, fill_opacity=0.5)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(sphere))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.3. Torus</h4>
+        <div class="content-block">
+            <p>Tạo hình xuyến với bán kính trong 1, bán kính ngoài 2, màu vàng, độ mờ 0.5, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TorusExample(ThreeDScene):
+    def construct(self):
+        torus = Torus(r=1, R=2, fill_color=YELLOW, fill_opacity=0.5)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(torus))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.4. Cone</h4>
+        <div class="content-block">
+            <p>Tạo hình nón với bán kính đáy 1, chiều cao 2, màu xanh lá, độ mờ 0.5, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ConeExample(ThreeDScene):
+    def construct(self):
+        cone = Cone(base_radius=1, height=2, fill_color=GREEN, fill_opacity=0.5)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(cone))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.5. Dodecahedron</h4>
+        <div class="content-block">
+            <p>Tạo khối 12 mặt với cạnh dài 1, màu cam, độ mờ 0.5, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class DodecahedronExample(ThreeDScene):
+    def construct(self):
+        dodeca = Dodecahedron(edge_length=1, fill_color=ORANGE, fill_opacity=0.5)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(dodeca))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.6. Icosahedron</h4>
+        <div class="content-block">
+            <p>Tạo khối 20 mặt với cạnh dài 1, màu tím, độ mờ 0.5, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class IcosahedronExample(ThreeDScene):
+    def construct(self):
+        icosa = Icosahedron(edge_length=1, fill_color=PURPLE, fill_opacity=0.5)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(icosa))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.7. Octahedron</h4>
+        <div class="content-block">
+            <p>Tạo khối 8 mặt với cạnh dài 1, màu xanh dương, độ mờ 0.5, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class OctahedronExample(ThreeDScene):
+    def construct(self):
+        octa = Octahedron(edge_length=1, fill_color=BLUE, fill_opacity=0.5)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(octa))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.8. Tetrahedron</h4>
+        <div class="content-block">
+            <p>Tạo khối 4 mặt với cạnh dài 1, màu đỏ, độ mờ 0.5, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TetrahedronExample(ThreeDScene):
+    def construct(self):
+        tetra = Tetrahedron(edge_length=1, fill_color=RED, fill_opacity=0.5)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(tetra))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.9. ConvexHull3D</h4>
+        <div class="content-block">
+            <p>Tạo bao lồi 3D từ 10 điểm ngẫu nhiên trong khoảng tọa độ (-2, 2), hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import numpy as np
+class ConvexHull3DExample(ThreeDScene):
+    def construct(self):
+        points = [Dot3D(np.array([np.random.uniform(-2, 2), np.random.uniform(-2, 2), np.random.uniform(-2, 2)])) for _ in range(10)]
+        hull = ConvexHull3D(*points)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.add(*points)
+        self.play(Create(hull))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.10. ThreeDAxes</h4>
+        <div class="content-block">
+            <p>Tạo hệ trục 3D, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ThreeDAxesExample(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes()
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(axes))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.11. Dot3D</h4>
+        <div class="content-block">
+            <p>Tạo điểm 3D tại tọa độ (1, 1, 1), màu đỏ, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class Dot3DExample(ThreeDScene):
+    def construct(self):
+        dot = Dot3D(point=[1, 1, 1], color=RED)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(FadeIn(dot))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.12. Line3D</h4>
+        <div class="content-block">
+            <p>Tạo đường thẳng 3D từ tọa độ (0, 0, 0) đến (1, 1, 1), màu xanh dương, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class Line3DExample(ThreeDScene):
+    def construct(self):
+        line = Line3D(start=[0, 0, 0], end=[1, 1, 1], color=BLUE)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(line))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.7.13. Arrow3D</h4>
+        <div class="content-block">
+            <p>Tạo mũi tên 3D từ tọa độ (0, 0, 0) đến (1, 1, 1), màu xanh lá, hiển thị trong không gian 3D:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class Arrow3DExample(ThreeDScene):
+    def construct(self):
+        arrow = Arrow3D(start=[0, 0, 0], end=[1, 1, 1], color=GREEN)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(arrow))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.8. Vector field</h3>
+        <h4>4.8.1. ArrowVectorField</h4>
+        <div class="content-block">
+            <p>Tạo trường vector mũi tên trong khoảng tọa độ x, y từ -3 đến 3, với hàm vector [pos[1], -pos[0], 0]:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import numpy as np
+class ArrowVectorFieldExample(Scene):
+    def construct(self):
+        func = lambda pos: np.array([pos[1], -pos[0], 0])
+        field = ArrowVectorField(func, x_range=[-3, 3], y_range=[-3, 3])
+        self.play(Create(field))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.8.2. StreamLines</h4>
+        <div class="content-block">
+            <p>Tạo dòng chảy trong khoảng tọa độ x, y từ -3 đến 3, với hàm vector [pos[1], -pos[0], 0]:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import numpy as np
+class StreamLinesExample(Scene):
+    def construct(self):
+        func = lambda pos: np.array([pos[1], -pos[0], 0])
+        lines = StreamLines(func, x_range=[-3, 3], y_range=[-3, 3])
+        self.play(Create(lines))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.8.3. VectorField</h4>
+        <div class="content-block">
+            <p>Tạo trường vector trong khoảng tọa độ x, y từ -3 đến 3, với hàm vector [pos[1], -pos[0], 0]:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import numpy as np
+class VectorFieldExample(Scene):
+    def construct(self):
+        func = lambda pos: np.array([pos[1], -pos[0], 0])
+        field = VectorField(func, x_range=[-3, 3], y_range=[-3, 3])
+        self.play(Create(field))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.9. Khung và hình nền</h3>
+        <h4>4.9.1. ScreenRectangle</h4>
+        <div class="content-block">
+            <p>Tạo khung màn hình:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ScreenRectangleExample(Scene):
+    def construct(self):
+        rect = ScreenRectangle()
+        self.play(Create(rect))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.9.2. FullScreenRectangle</h4>
+        <div class="content-block">
+            <p>Tạo khung toàn màn hình:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class FullScreenRectangleExample(Scene):
+    def construct(self):
+        rect = FullScreenRectangle()
+        self.play(Create(rect))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.9.3. BackgroundRectangle</h4>
+        <div class="content-block">
+            <p>Tạo hình chữ nhật nền cho văn bản "Background", màu xanh dương, độ mờ 0.5:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class BackgroundRectangleExample(Scene):
+    def construct(self):
+        text = Text("Background")
+        bg_rect = BackgroundRectangle(text, color=BLUE, fill_opacity=0.5)
+        self.add(bg_rect, text)
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.9.4. SampleSpaceRectangle</h4>
+        <div class="content-block">
+            <p>Tạo khung không gian mẫu:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class SampleSpaceRectangleExample(Scene):
+    def construct(self):
+        rect = SampleSpaceRectangle()
+        self.play(Create(rect))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.9.5. RoundedRectangle</h4>
+        <div class="content-block">
+            <p>Tạo hình chữ nhật bo góc với chiều rộng 3, chiều cao 2, bán kính góc 0.5, màu xanh lá:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class RoundedRectangleExample(Scene):
+    def construct(self):
+        rect = RoundedRectangle(width=3, height=2, corner_radius=0.5, color=GREEN)
+        self.play(Create(rect))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h3>4.10. Các Mobject khác</h3>
+        <h4>4.10.1. ManimBanner</h4>
+        <div class="content-block">
+            <p>Tạo biểu ngữ Manim:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ManimBannerExample(Scene):
+    def construct(self):
+        banner = ManimBanner()
+        self.play(banner.create())
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.2. NumberLine</h4>
+        <div class="content-block">
+            <p>Tạo đường số trong khoảng từ -5 đến 5, bước nhảy 1:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class NumberLineExample(Scene):
+    def construct(self):
+        line = NumberLine(x_range=[-5, 5, 1])
+        self.play(Create(line))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.3. NumberPlane</h4>
+        <div class="content-block">
+            <p>Tạo mặt phẳng số:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class NumberPlaneExample(Scene):
+    def construct(self):
+        plane = NumberPlane()
+        self.play(Create(plane))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.4. FunctionGraph</h4>
+        <div class="content-block">
+            <p>Tạo đồ thị hàm số sin(x) trên hệ trục, màu xanh dương:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+import numpy as np
+class FunctionGraphExample(Scene):
+    def construct(self):
+        axes = Axes()
+        graph = axes.get_graph(lambda x: np.sin(x), color=BLUE)
+        self.play(Create(axes), Create(graph))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.5. TipableVMobject</h4>
+        <div class="content-block">
+            <p>Tạo mũi tên với đầu ArrowCircleTip từ LEFT đến RIGHT, màu xanh dương:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class TipableVMobjectExample(Scene):
+    def construct(self):
+        arrow = Arrow(start=LEFT, end=RIGHT, tip_shape=ArrowCircleTip, color=BLUE)
+        self.play(Create(arrow))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.6. VectorizedPoint</h4>
+        <div class="content-block">
+            <p>Tạo điểm vector hóa tại vị trí RIGHT nhân 2, màu đỏ:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class VectorizedPointExample(Scene):
+    def construct(self):
+        point = VectorizedPoint(location=RIGHT * 2, color=RED)
+        self.play(FadeIn(point))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.7. CoordinateSystem</h4>
+        <div class="content-block">
+            <p>Tạo hệ tọa độ:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class CoordinateSystemExample(Scene):
+    def construct(self):
+        coords = CoordinateSystem()
+        self.play(Create(coords))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.8. PolarPlane</h4>
+        <div class="content-block">
+            <p>Tạo mặt phẳng cực:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class PolarPlaneExample(Scene):
+    def construct(self):
+        plane = PolarPlane()
+        self.play(Create(plane))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.9. ComplexPlane</h4>
+        <div class="content-block">
+            <p>Tạo mặt phẳng số phức và một điểm tại (1 + 1j), màu vàng:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class ComplexPlaneExample(Scene):
+    def construct(self):
+        plane = ComplexPlane()
+        dot = Dot(plane.n2p(1 + 1j), color=YELLOW)
+        self.play(Create(plane), FadeIn(dot))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.10. BarChart</h4>
+        <div class="content-block">
+            <p>Tạo biểu đồ cột với các giá trị 1, 2, 3, 4, trục y từ 0 đến 5:</p>
+            <table>
+                <tr>
+                    <td><pre><code class="language-python">from manim import *
+class BarChartExample(Scene):
+    def construct(self):
+        chart = BarChart(values=[1, 2, 3, 4], y_range=[0, 5, 1])
+        self.play(Create(chart))
+        self.wait()</code></pre></td>
+                </tr>
+            </table>
+        </div>
+
+        <h4>4.10.11. Brace</h4>
+<div class="content-block">
+    <p>Tạo dấu ngoặc chú thích cho đường thẳng từ LEFT nhân 2 đến RIGHT nhân 2, hướng xuống, màu xanh dương:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class BraceExample(Scene):
+    def construct(self):
+        line = Line(LEFT * 2, RIGHT * 2)
+        brace = Brace(line, direction=DOWN, color=BLUE)
+        self.add(line)
+        self.play(Create(brace))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.12. BraceBetweenPoints</h4>
+<div class="content-block">
+    <p>Tạo dấu ngoặc giữa hai điểm (LEFT nhân 2 và RIGHT nhân 2), màu xanh dương:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class BraceBetweenPointsExample(Scene):
+    def construct(self):
+        p1 = Dot(LEFT * 2)
+        p2 = Dot(RIGHT * 2)
+        brace = BraceBetweenPoints(p1.get_center(), p2.get_center(), color=BLUE)
+        self.add(p1, p2)
+        self.play(Create(brace))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.13. Cross</h4>
+<div class="content-block">
+    <p>Tạo dấu X với hệ số tỷ lệ 1, màu đỏ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class CrossExample(Scene):
+    def construct(self):
+        cross = Cross(scale_factor=1, color=RED)
+        self.play(Create(cross))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.14. VDict</h4>
+<div class="content-block">
+    <p>Tạo từ điển vector với key1 là Dot và key2 là Circle:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class VDictExample(Scene):
+    def construct(self):
+        vdict = VDict({"key1": Dot(), "key2": Circle()})
+        self.play(FadeIn(vdict))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.15. ImageMobject</h4>
+<div class="content-block">
+    <p>Tạo hình ảnh từ đường dẫn "path/to/image.png":</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ImageMobjectExample(Scene):
+    def construct(self):
+        img = ImageMobject("path/to/image.png")
+        self.play(FadeIn(img))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.16. SVGObject</h4>
+<div class="content-block">
+    <p>Tạo đối tượng SVG từ đường dẫn "path/to/file.svg":</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SVGObjectExample(Scene):
+    def construct(self):
+        svg = SVGMobject("path/to/file.svg")
+        self.play(FadeIn(svg))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.17. ParametricFunction</h4>
+<div class="content-block">
+    <p>Tạo hàm tham số hình tròn với tọa độ [cos(t), sin(t), 0], t từ 0 đến 2π, màu xanh dương:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+import numpy as np
+class ParametricFunctionExample(Scene):
+    def construct(self):
+        func = ParametricFunction(lambda t: np.array([np.cos(t), np.sin(t), 0]), t_range=[0, 2*PI], color=BLUE)
+        self.play(Create(func))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.18. ThreeDVMobject</h4>
+<div class="content-block">
+    <p>Tạo đối tượng vector 3D, hiển thị trong không gian 3D:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ThreeDVMobjectExample(ThreeDScene):
+    def construct(self):
+        obj = ThreeDVMobject()
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(obj))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.19. VMobjectFromSVGPath</h4>
+<div class="content-block">
+    <p>Tạo đối tượng từ đường dẫn SVG "path/to/svg/path":</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class VMobjectFromSVGPathExample(Scene):
+    def construct(self):
+        obj = VMobjectFromSVGPath("path/to/svg/path")
+        self.play(FadeIn(obj))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.20. BraceLabel</h4>
+<div class="content-block">
+    <p>Tạo dấu ngoặc với nhãn "Length" cho đường thẳng từ LEFT nhân 2 đến RIGHT nhân 2, hướng xuống, màu xanh dương:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class BraceLabelExample(Scene):
+    def construct(self):
+        line = Line(LEFT * 2, RIGHT * 2)
+        brace = BraceLabel(line, "Length", brace_direction=DOWN, color=BLUE)
+        self.add(line)
+        self.play(Create(brace))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>4.10.21. Difference</h4>
+<div class="content-block">
+    <p>Tạo hiệu của một hình tròn (bán kính 1, màu xanh dương) và một hình vuông (cạnh 1, màu đỏ):</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class DifferenceExample(Scene):
+    def construct(self):
+        circle = Circle(radius=1, fill_opacity=1, color=BLUE)
+        square = Square(side_length=1, fill_opacity=1, color=RED)
+        diff = Difference(circle, square)
+        self.play(Create(diff))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h2>5. Animations chi tiết và cách code</h2>
+<h3>5.1. Hiệu ứng hiển thị</h3>
+<h4>5.1.1. FadeIn</h4>
+<div class="content-block">
+    <p>Hiển thị mờ dần một hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class FadeInExample(Scene):
+    def construct(self):
+        circle = Circle()
+        self.play(FadeIn(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.2. FadeOut</h4>
+<div class="content-block">
+    <p>Ẩn mờ dần một hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class FadeOutExample(Scene):
+    def construct(self):
+        circle = Circle()
+        self.add(circle)
+        self.play(FadeOut(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.3. Write</h4>
+<div class="content-block">
+    <p>Viết văn bản "Hello, Manim!":</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class WriteExample(Scene):
+    def construct(self):
+        text = Text("Hello, Manim!")
+        self.play(Write(text))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.4. Create</h4>
+<div class="content-block">
+    <p>Tạo một hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class CreateExample(Scene):
+    def construct(self):
+        circle = Circle()
+        self.play(Create(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.5. AddTextLetterByLetter</h4>
+<div class="content-block">
+    <p>Thêm văn bản "Hello, Manim!" từng chữ một:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class AddTextLetterByLetterExample(Scene):
+    def construct(self):
+        text = Text("Hello, Manim!")
+        self.play(AddTextLetterByLetter(text))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.6. AddTextWordByWord</h4>
+<div class="content-block">
+    <p>Thêm văn bản "Hello, Manim!" từng từ một:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class AddTextWordByWordExample(Scene):
+    def construct(self):
+        text = Text("Hello, Manim!")
+        self.play(AddTextWordByWord(text))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.7. Unwrite</h4>
+<div class="content-block">
+    <p>Xóa văn bản "Hello, Manim!" từng chữ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class UnwriteExample(Scene):
+    def construct(self):
+        text = Text("Hello, Manim!")
+        self.add(text)
+        self.play(Unwrite(text))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.8. Uncreate</h4>
+<div class="content-block">
+    <p>Xóa một hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class UncreateExample(Scene):
+    def construct(self):
+        circle = Circle()
+        self.add(circle)
+        self.play(Uncreate(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.9. ShowIncreasingSubsets</h4>
+<div class="content-block">
+    <p>Hiển thị từng tập hợp con của 7 điểm từ -3 đến 3:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ShowIncreasingSubsetsExample(Scene):
+    def construct(self):
+        dots = VGroup(*[Dot(RIGHT * i) for i in range(-3, 4)])
+        self.play(ShowIncreasingSubsets(dots))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.10. ShowSubmobjectsOneByOne</h4>
+<div class="content-block">
+    <p>Hiển thị từng điểm một trong 7 điểm từ -3 đến 3:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ShowSubmobjectsOneByOneExample(Scene):
+    def construct(self):
+        dots = VGroup(*[Dot(RIGHT * i) for i in range(-3, 4)])
+        self.play(ShowSubmobjectsOneByOne(dots))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.11. SpiralIn</h4>
+<div class="content-block">
+    <p>Hiển thị một hình tròn theo hiệu ứng xoắn ốc:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SpiralInExample(Scene):
+    def construct(self):
+        circle = Circle()
+        self.play(SpiralIn(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.12. TypeWithCursor</h4>
+<div class="content-block">
+    <p>Gõ văn bản "Typing..." với con trỏ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class TypeWithCursorExample(Scene):
+    def construct(self):
+        text = Text("Typing...")
+        self.play(TypeWithCursor(text))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.13. UntypeWithCursor</h4>
+<div class="content-block">
+    <p>Xóa văn bản "Typing..." với con trỏ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class UntypeWithCursorExample(Scene):
+    def construct(self):
+        text = Text("Typing...")
+        self.add(text)
+        self.play(UntypeWithCursor(text))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.14. RemoveTextLetterByLetter</h4>
+<div class="content-block">
+    <p>Xóa văn bản "Hello, Manim!" từng chữ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class RemoveTextLetterByLetterExample(Scene):
+    def construct(self):
+        text = Text("Hello, Manim!")
+        self.add(text)
+        self.play(RemoveTextLetterByLetter(text))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.1.15. ShowPartial</h4>
+<div class="content-block">
+    <p>Hiển thị từng phần của một hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ShowPartialExample(Scene):
+    def construct(self):
+        circle = Circle()
+        self.play(ShowPartial(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>5.2. Hiệu ứng xoay và biến đổi</h3>
+<h4>5.2.1. Rotate</h4>
+<div class="content-block">
+    <p>Xoay một hình vuông một góc π/2 radian:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class RotateExample(Scene):
+    def construct(self):
+        square = Square()
+        self.play(Rotate(square, angle=PI/2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.2. Transform</h4>
+<div class="content-block">
+    <p>Biến đổi một hình vuông thành hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class TransformExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle()
+        self.add(square)
+        self.play(Transform(square, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.3. ApplyMatrix</h4>
+<div class="content-block">
+    <p>Áp dụng ma trận biến đổi [[1, 1], [0, 2/3]] cho văn bản "Hello World!":</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ApplyMatrixExample(Scene):
+    def construct(self):
+        matrix = [[1, 1], [0, 2/3]]
+        text = Text("Hello World!")
+        self.play(ApplyMatrix(matrix, text))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.4. ApplyComplexFunction</h4>
+<div class="content-block">
+    <p>Áp dụng hàm phức z^2 cho một hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ApplyComplexFunctionExample(Scene):
+    def construct(self):
+        circle = Circle()
+        func = lambda z: z**2
+        self.play(ApplyComplexFunction(func, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.5. ApplyPointwiseFunction</h4>
+<div class="content-block">
+    <p>Áp dụng hàm dịch chuyển điểm sang phải cho một hình vuông:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ApplyPointwiseFunctionExample(Scene):
+    def construct(self):
+        square = Square()
+        func = lambda point: point + RIGHT
+        self.play(ApplyPointwiseFunction(func, square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.6. ApplyPointwiseFunctionToCenter</h4>
+<div class="content-block">
+    <p>Áp dụng hàm phóng to gấp đôi tại tâm cho một hình vuông:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ApplyPointwiseFunctionToCenterExample(Scene):
+    def construct(self):
+        square = Square()
+        func = lambda point: point * 2
+        self.play(ApplyPointwiseFunctionToCenter(func, square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.7. ApplyFunction</h4>
+<div class="content-block">
+    <p>Áp dụng hàm dịch chuyển sang phải cho một hình vuông:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ApplyFunctionExample(Scene):
+    def construct(self):
+        square = Square()
+        func = lambda m: m.shift(RIGHT)
+        self.play(ApplyFunction(func, square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.8. ApplyMethod</h4>
+<div class="content-block">
+    <p>Áp dụng phương thức dịch chuyển sang phải cho một hình vuông:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ApplyMethodExample(Scene):
+    def construct(self):
+        square = Square()
+        self.play(ApplyMethod(square.shift, RIGHT))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.9. ClockwiseTransform</h4>
+<div class="content-block">
+    <p>Biến đổi một hình vuông thành hình tròn theo chiều kim đồng hồ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ClockwiseTransformExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle()
+        self.add(square)
+        self.play(ClockwiseTransform(square, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.10. CounterclockwiseTransform</h4>
+<div class="content-block">
+    <p>Biến đổi một hình vuông thành hình tròn ngược chiều kim đồng hồ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class CounterclockwiseTransformExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle()
+        self.add(square)
+        self.play(CounterclockwiseTransform(square, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.11. CyclicReplace</h4>
+<div class="content-block">
+    <p>Thay thế tuần hoàn vị trí của hai điểm tại LEFT và RIGHT:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class CyclicReplaceExample(Scene):
+    def construct(self):
+        dot1 = Dot(LEFT)
+        dot2 = Dot(RIGHT)
+        self.add(dot1, dot2)
+        self.play(CyclicReplace(dot1, dot2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.12. FadeTransform</h4>
+<div class="content-block">
+    <p>Biến đổi mờ dần một hình vuông thành hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class FadeTransformExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle()
+        self.add(square)
+        self.play(FadeTransform(square, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.13. FadeTransformPieces</h4>
+<div class="content-block">
+    <p>Biến đổi mờ từng phần một hình vuông thành hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class FadeTransformPiecesExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle()
+        self.add(square)
+        self.play(FadeTransformPieces(square, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.14. TransformAnimations</h4>
+<div class="content-block">
+    <p>Biến đổi hoạt hình từ FadeOut hình vuông sang FadeIn hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class TransformAnimationsExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle()
+        self.add(square)
+        anim1 = FadeOut(square)
+        anim2 = FadeIn(circle)
+        self.play(TransformAnimations(anim1, anim2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.15. TransformFromCopy</h4>
+<div class="content-block">
+    <p>Biến đổi từ bản sao của một hình vuông sang một hình tròn dịch sang phải nhân 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class TransformFromCopyExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle().shift(RIGHT * 2)
+        self.add(square)
+        self.play(TransformFromCopy(square, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.16. ReplacementTransform</h4>
+<div class="content-block">
+    <p>Thay thế biến đổi một hình vuông thành hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ReplacementTransformExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle()
+        self.add(square)
+        self.play(ReplacementTransform(square, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.17. Restore</h4>
+<div class="content-block">
+    <p>Khôi phục trạng thái ban đầu của một hình vuông sau khi dịch chuyển sang phải:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class RestoreExample(Scene):
+    def construct(self):
+        square = Square()
+        square.save_state()
+        self.add(square)
+        self.play(square.animate.shift(RIGHT))
+        self.play(Restore(square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.18. FadeToColor</h4>
+<div class="content-block">
+    <p>Thay đổi màu mờ dần của một hình vuông từ xanh dương sang đỏ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class FadeToColorExample(Scene):
+    def construct(self):
+        square = Square(color=BLUE)
+        self.add(square)
+        self.play(FadeToColor(square, RED))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.19. ScaleInPlace</h4>
+<div class="content-block">
+    <p>Phóng to tại chỗ một hình vuông gấp 2 lần:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ScaleInPlaceExample(Scene):
+    def construct(self):
+        square = Square()
+        self.add(square)
+        self.play(ScaleInPlace(square, 2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.20. ShrinkToCenter</h4>
+<div class="content-block">
+    <p>Thu nhỏ một hình vuông vào tâm:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ShrinkToCenterExample(Scene):
+    def construct(self):
+        square = Square()
+        self.add(square)
+        self.play(ShrinkToCenter(square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.21. Swap</h4>
+<div class="content-block">
+    <p>Hoán đổi vị trí của hai điểm tại LEFT và RIGHT:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SwapExample(Scene):
+    def construct(self):
+        dot1 = Dot(LEFT)
+        dot2 = Dot(RIGHT)
+        self.add(dot1, dot2)
+        self.play(Swap(dot1, dot2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.22. TransformMatchingShapes</h4>
+<div class="content-block">
+    <p>Biến đổi hai hình vuông giống nhau, hình thứ hai dịch sang phải nhân 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class TransformMatchingShapesExample(Scene):
+    def construct(self):
+        square1 = Square()
+        square2 = Square().shift(RIGHT * 2)
+        self.add(square1)
+        self.play(TransformMatchingShapes(square1, square2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.2.23. TransformMatchingTex</h4>
+<div class="content-block">
+    <p>Biến đổi hai văn bản Tex giống nhau "ABC", văn bản thứ hai dịch sang phải nhân 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class TransformMatchingTexExample(Scene):
+    def construct(self):
+        tex1 = Tex("ABC")
+        tex2 = Tex("ABC").shift(RIGHT * 2)
+        self.add(tex1)
+        self.play(TransformMatchingTex(tex1, tex2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>5.3. Hiệu ứng nhóm</h3>
+<h4>5.3.1. AnimationGroup</h4>
+<div class="content-block">
+    <p>Nhóm hai hiệu ứng: FadeIn hình vuông và hình tròn (dịch sang phải nhân 2) với độ trễ 0.5:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class AnimationGroupExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle().shift(RIGHT * 2)
+        self.play(AnimationGroup(
+            FadeIn(square),
+            FadeIn(circle),
+            lag_ratio=0.5
+        ))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.3.2. LaggedStart</h4>
+<div class="content-block">
+    <p>Bắt đầu trễ hai hiệu ứng: FadeIn hình vuông và hình tròn (dịch sang phải nhân 2) với độ trễ 0.5:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class LaggedStartExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle().shift(RIGHT * 2)
+        self.play(LaggedStart(
+            FadeIn(square),
+            FadeIn(circle),
+            lag_ratio=0.5
+        ))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.3.3. Succession</h4>
+<div class="content-block">
+    <p>Thực hiện liên tiếp hai hiệu ứng: FadeIn hình vuông và hình tròn (dịch sang phải nhân 2):</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SuccessionExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle().shift(RIGHT * 2)
+        self.play(Succession(
+            FadeIn(square),
+            FadeIn(circle)
+        ))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.3.4. LaggedStartMap</h4>
+<div class="content-block">
+    <p>Áp dụng trễ cho tập hợp 7 điểm từ -3 đến 3, với độ trễ 0.2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class LaggedStartMapExample(Scene):
+    def construct(self):
+        dots = VGroup(*[Dot(RIGHT * i) for i in range(-3, 4)])
+        self.play(LaggedStartMap(FadeIn, dots, lag_ratio=0.2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>5.4. Hiệu ứng đặc biệt</h3>
+<h4>5.4.1. Broadcast</h4>
+<div class="content-block">
+    <p>Hiệu ứng lan tỏa cho hình tròn với bán kính 2, màu teal nhạt:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class BroadcastExample(Scene):
+    def construct(self):
+        circle = Circle(radius=2, color=TEAL_A)
+        self.play(Broadcast(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.2. TracedPath</h4>
+<div class="content-block">
+    <p>Vẽ đường đi của một điểm từ RIGHT nhân 2 sang LEFT nhân 4, độ mờ đường vẽ 0.5:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class TracedPathExample(Scene):
+    def construct(self):
+        dot = Dot(RIGHT * 2)
+        path = TracedPath(dot.get_center, stroke_opacity=0.5)
+        self.add(dot, path)
+        self.play(dot.animate.shift(LEFT * 4))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.3. Indicate</h4>
+<div class="content-block">
+    <p>Làm nổi bật một điểm với màu đỏ:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class IndicateExample(Scene):
+    def construct(self):
+        dot = Dot()
+        self.add(dot)
+        self.play(Indicate(dot, color=RED))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.4. ApplyWave</h4>
+<div class="content-block">
+    <p>Hiệu ứng sóng cho một hình vuông:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ApplyWaveExample(Scene):
+    def construct(self):
+        square = Square()
+        self.add(square)
+        self.play(ApplyWave(square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.5. Flash</h4>
+<div class="content-block">
+    <p>Hiệu ứng nháy cho một điểm, màu vàng:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class FlashExample(Scene):
+    def construct(self):
+        dot = Dot()
+        self.add(dot)
+        self.play(Flash(dot, color=YELLOW))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.6. Circumscribe</h4>
+<div class="content-block">
+    <p>Vẽ khung bao quanh văn bản "Highlight", màu xanh dương:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class CircumscribeExample(Scene):
+    def construct(self):
+        text = Text("Highlight")
+        self.add(text)
+        self.play(Circumscribe(text, color=BLUE))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.7. AnimatedBoundary</h4>
+<div class="content-block">
+    <p>Tạo biên động cho một hình vuông với màu sắc chuyển đổi từ đỏ sang xanh dương, tốc độ chu kỳ 1:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class AnimatedBoundaryExample(Scene):
+    def construct(self):
+        square = Square()
+        boundary = AnimatedBoundary(square, colors=[RED, BLUE], cycle_rate=1)
+        self.add(square, boundary)
+        self.wait(3)</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.8. Blink</h4>
+<div class="content-block">
+    <p>Hiệu ứng nhấp nháy cho một điểm:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class BlinkExample(Scene):
+    def construct(self):
+        dot = Dot()
+        self.add(dot)
+        self.play(Blink(dot))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.9. FocusOn</h4>
+<div class="content-block">
+    <p>Tập trung vào một điểm tại RIGHT nhân 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class FocusOnExample(Scene):
+    def construct(self):
+        dot = Dot(RIGHT * 2)
+        self.add(dot)
+        self.play(FocusOn(dot))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.10. ShowPassingFlash</h4>
+<div class="content-block">
+    <p>Hiệu ứng nháy qua cho đường thẳng từ LEFT nhân 2 đến RIGHT nhân 2, màu vàng:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ShowPassingFlashExample(Scene):
+    def construct(self):
+        line = Line(LEFT * 2, RIGHT * 2)
+        self.add(line)
+        self.play(ShowPassingFlash(line, color=YELLOW))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.11. ShowPassingFlashWithThinningStrokeWidth</h4>
+<div class="content-block">
+    <p>Hiệu ứng nháy qua với độ dày thay đổi cho đường thẳng từ LEFT nhân 2 đến RIGHT nhân 2, màu vàng:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ShowPassingFlashWithThinningStrokeWidthExample(Scene):
+    def construct(self):
+        line = Line(LEFT * 2, RIGHT * 2)
+        self.add(line)
+        self.play(ShowPassingFlashWithThinningStrokeWidth(line, color=YELLOW))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.4.12. Wiggle</h4>
+<div class="content-block">
+    <p>Hiệu ứng lắc cho một điểm:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class WiggleExample(Scene):
+    def construct(self):
+        dot = Dot()
+        self.add(dot)
+        self.play(Wiggle(dot))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>5.5. Hiệu ứng tăng trưởng</h3>
+<h4>5.5.1. GrowFromCenter</h4>
+<div class="content-block">
+    <p>Tăng trưởng một hình vuông từ tâm:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class GrowFromCenterExample(Scene):
+    def construct(self):
+        square = Square()
+        self.play(GrowFromCenter(square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.5.2. GrowFromEdge</h4>
+<div class="content-block">
+    <p>Tăng trưởng một hình vuông từ cạnh phải:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class GrowFromEdgeExample(Scene):
+    def construct(self):
+        square = Square()
+        self.play(GrowFromEdge(square, RIGHT))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.5.3. GrowArrow</h4>
+<div class="content-block">
+    <p>Tăng trưởng một mũi tên từ LEFT đến RIGHT:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class GrowArrowExample(Scene):
+    def construct(self):
+        arrow = Arrow(LEFT, RIGHT)
+        self.play(GrowArrow(arrow))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.5.4. SpinInFromNothing</h4>
+<div class="content-block">
+    <p>Xoay một hình vuông từ không:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SpinInFromNothingExample(Scene):
+    def construct(self):
+        square = Square()
+        self.play(SpinInFromNothing(square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.5.5. GrowFromPoint</h4>
+<div class="content-block">
+    <p>Tăng trưởng một hình vuông từ điểm RIGHT nhân 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class GrowFromPointExample(Scene):
+    def construct(self):
+        square = Square()
+        self.play(GrowFromPoint(square, RIGHT * 2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>5.6. Hiệu ứng chuyển động</h3>
+<h4>5.6.1. MoveAlongPath</h4>
+<div class="content-block">
+    <p>Di chuyển một điểm theo đường tròn bán kính 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class MoveAlongPathExample(Scene):
+    def construct(self):
+        dot = Dot()
+        path = Circle(radius=2)
+        self.add(dot, path)
+        self.play(MoveAlongPath(dot, path))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.6.2. Homotopy</h4>
+<div class="content-block">
+    <p>Hiệu ứng biến dạng một hình vuông với hàm x+t, y+t, z:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+import numpy as np
+class HomotopyExample(Scene):
+    def construct(self):
+        square = Square()
+        func = lambda x, y, z, t: np.array([x + t, y + t, z])
+        self.add(square)
+        self.play(Homotopy(func, square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.6.3. ComplexHomotopy</h4>
+<div class="content-block">
+    <p>Biến dạng phức một hình vuông với hàm z+t:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ComplexHomotopyExample(Scene):
+    def construct(self):
+        square = Square()
+        func = lambda z, t: z + t
+        self.add(square)
+        self.play(ComplexHomotopy(func, square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.6.4. PhaseFlow</h4>
+<div class="content-block">
+    <p>Dòng chảy pha cho một điểm với hàm vector [pos[1], -pos[0], 0]:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+import numpy as np
+class PhaseFlowExample(Scene):
+    def construct(self):
+        dot = Dot()
+        func = lambda pos: np.array([pos[1], -pos[0], 0])
+        self.add(dot)
+        self.play(PhaseFlow(func, dot))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.6.5. SmoothedVectorizedHomotopy</h4>
+<div class="content-block">
+    <p>Biến dạng mượt một hình vuông với hàm x+t, y+t, z:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+import numpy as np
+class SmoothedVectorizedHomotopyExample(Scene):
+    def construct(self):
+        square = Square()
+        func = lambda x, y, z, t: np.array([x + t, y + t, z])
+        self.add(square)
+        self.play(SmoothedVectorizedHomotopy(func, square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.6.6. MoveToTarget</h4>
+<div class="content-block">
+    <p>Di chuyển một điểm đến mục tiêu tại RIGHT nhân 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class MoveToTargetExample(Scene):
+    def construct(self):
+        dot = Dot()
+        dot.generate_target()
+        dot.target.shift(RIGHT * 2)
+        self.add(dot)
+        self.play(MoveToTarget(dot))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>5.7. Hiệu ứng số</h3>
+<h4>5.7.1. ChangeDecimalToValue</h4>
+<div class="content-block">
+    <p>Thay đổi giá trị của một số thập phân từ 0 đến 10:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ChangeDecimalToValueExample(Scene):
+    def construct(self):
+        number = DecimalNumber(0)
+        self.add(number)
+        self.play(ChangeDecimalToValue(number, 10))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.7.2. ChangingDecimal</h4>
+<div class="content-block">
+    <p>Thay đổi số thập phân từ 0 đến 10 trong 3 giây với hàm t*10:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ChangingDecimalExample(Scene):
+    def construct(self):
+        number = DecimalNumber(0)
+        self.add(number)
+        self.play(ChangingDecimal(number, lambda t: t * 10, run_time=3))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>5.8. Hiệu ứng khác</h3>
+<h4>5.8.1. DrawBorderThenFill</h4>
+<div class="content-block">
+    <p>Vẽ biên rồi tô một hình vuông:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class DrawBorderThenFillExample(Scene):
+    def construct(self):
+        square = Square()
+        self.play(DrawBorderThenFill(square))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.8.2. MaintainPositionRelativeTo</h4>
+<div class="content-block">
+    <p>Giữ vị trí tương đối của một điểm tại RIGHT so với một điểm tại LEFT khi điểm tại LEFT di chuyển lên trên:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class MaintainPositionRelativeToExample(Scene):
+    def construct(self):
+        dot1 = Dot(LEFT)
+        dot2 = Dot(RIGHT)
+        dot2.add_updater(lambda m: m.next_to(dot1, RIGHT))
+        self.add(dot1, dot2)
+        self.play(dot1.animate.shift(UP))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.8.3. UpdateFromAlphaFunc</h4>
+<div class="content-block">
+    <p>Cập nhật vị trí của một điểm theo alpha, dịch chuyển sang phải:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class UpdateFromAlphaFuncExample(Scene):
+    def construct(self):
+        dot = Dot()
+        func = lambda alpha: dot.shift(RIGHT * alpha)
+        self.add(dot)
+        self.play(UpdateFromAlphaFunc(dot, func))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>5.8.4. ChangeSpeed</h4>
+<div class="content-block">
+    <p>Thay đổi tốc độ di chuyển của một điểm sang RIGHT nhân 4, với tốc độ thay đổi từ 1 đến 0.1 rồi quay lại 1:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ChangeSpeedExample(Scene):
+    def construct(self):
+        dot = Dot()
+        self.add(dot)
+        self.play(ChangeSpeed(
+            dot.animate.shift(RIGHT * 4),
+            speedinfo={0: 1, 0.5: 0.1, 1: 1}
+        ))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h2>6. Cameras chi tiết và cách code</h2>
+<h3>6.1. Camera cơ bản</h3>
+<h4>6.1.1. Camera</h4>
+<div class="content-block">
+    <p>Sử dụng camera mặc định để dịch chuyển khung hình sang phải rồi khôi phục:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class CameraExample(Scene):
+    def construct(self):
+        circle = Circle()
+        self.add(circle)
+        self.camera.frame.save_state()
+        self.play(self.camera.frame.animate.shift(RIGHT))
+        self.play(self.camera.frame.animate.restore())
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>6.1.2. BackgroundColoredVMobjectDisplayer</h4>
+<div class="content-block">
+    <p>Hiển thị một hình tròn với nền màu đen:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class BackgroundColoredVMobjectDisplayerExample(Scene):
+    def construct(self):
+        circle = Circle()
+        self.camera.add_background_colored_vmobject_displayer(circle, background_color=BLACK)
+        self.play(Create(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>6.2. MovingCamera</h3>
+<h4>6.2.1. MovingCamera</h4>
+<div class="content-block">
+    <p>Di chuyển camera đến vị trí RIGHT nhân 2 để tập trung vào một hình vuông:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class MovingCameraExample(MovingCameraScene):
+    def construct(self):
+        square = Square()
+        self.add(square)
+        self.play(self.camera.frame.animate.move_to(RIGHT * 2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>6.3. ThreeDCamera</h3>
+<h4>6.3.1. ThreeDCamera</h4>
+<div class="content-block">
+    <p>Sử dụng camera 3D để hiển thị và xoay một khối lập phương:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ThreeDCameraExample(ThreeDScene):
+    def construct(self):
+        cube = Cube()
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.add(cube)
+        self.play(Rotate(cube, angle=PI))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>6.4. MultiCamera và SplitScreenCamera</h3>
+<h4>6.4.1. MultiCamera</h4>
+<div class="content-block">
+    <p>Sử dụng nhiều camera để hiển thị một hình vuông và một hình tròn (dịch sang phải nhân 2):</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class MultiCameraExample(Scene):
+    def construct(self):
+        self.camera = MultiCamera(self)
+        square = Square()
+        circle = Circle().shift(RIGHT * 2)
+        self.add(square, circle)
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>6.4.2. SplitScreenCamera</h4>
+<div class="content-block">
+    <p>Chia màn hình để hiển thị một hình vuông và một hình tròn (dịch sang phải nhân 2):</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SplitScreenCameraExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle().shift(RIGHT * 2)
+        self.camera = SplitScreenCamera(self, square, circle)
+        self.add(square, circle)
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>6.5. MappingCamera</h3>
+<h4>6.5.1. MappingCamera</h4>
+<div class="content-block">
+    <p>Sử dụng camera ánh xạ để dịch chuyển khung hình sang phải cho một hình vuông:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class MappingCameraExample(Scene):
+    def construct(self):
+        self.camera = MappingCamera(self, mapping_func=lambda p: p + RIGHT)
+        square = Square()
+        self.add(square)
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h2>7. Scenes đặc biệt và cách code</h2>
+<h3>7.1. Scene cơ bản</h3>
+<h4>7.1.1. Scene</h4>
+<div class="content-block">
+    <p>Scene mặc định để tạo và hiển thị một hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class BasicScene(Scene):
+    def construct(self):
+        circle = Circle()
+        self.play(Create(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>7.2. MovingCameraScene</h3>
+<h4>7.2.1. MovingCameraScene</h4>
+<div class="content-block">
+    <p>Scene với camera di chuyển để tập trung vào một hình vuông tại RIGHT nhân 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class MovingCameraSceneExample(MovingCameraScene):
+    def construct(self):
+        square = Square()
+        self.add(square)
+        self.play(self.camera.frame.animate.move_to(RIGHT * 2))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>7.3. ThreeDScene và SpecialThreeDScene</h3>
+<h4>7.3.1. ThreeDScene</h4>
+<div class="content-block">
+    <p>Scene 3D để tạo và hiển thị một khối lập phương:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ThreeDSceneExample(ThreeDScene):
+    def construct(self):
+        cube = Cube()
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(cube))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>7.3.2. SpecialThreeDScene</h4>
+<div class="content-block">
+    <p>Scene 3D đặc biệt để tạo và hiển thị một khối lập phương:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SpecialThreeDSceneExample(SpecialThreeDScene):
+    def construct(self):
+        cube = Cube()
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.play(Create(cube))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>7.4. VectorSpaceScene</h3>
+<h4>7.4.1. VectorScene</h4>
+<div class="content-block">
+    <p>Scene vector để tạo và hiển thị một vector từ ORIGIN đến RIGHT nhân 2:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class VectorSceneExample(VectorScene):
+    def construct(self):
+        vector = Vector(RIGHT * 2)
+        self.play(Create(vector))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h4>7.4.2. LinearTransformationScene</h4>
+<div class="content-block">
+    <p>Scene biến đổi tuyến tính để áp dụng ma trận [[1, 1], [0, 1]] cho một vector [1, 1]:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class LinearTransformationSceneExample(LinearTransformationScene):
+    def construct(self):
+        matrix = [[1, 1], [0, 1]]
+        self.add_vector([1, 1])
+        self.apply_matrix(matrix)
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>7.5. ZoomedScene</h3>
+<h4>7.5.1. ZoomedScene</h4>
+<div class="content-block">
+    <p>Scene phóng to để tập trung vào một điểm:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class ZoomedSceneExample(ZoomedScene):
+    def construct(self):
+        dot = Dot()
+        self.add(dot)
+        self.activate_zooming(animate=True)
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>7.6. SplitScreenCamera với Scene</h3>
+<h4>7.6.1. SplitScreenScene</h4>
+<div class="content-block">
+    <p>Scene với camera chia màn hình để hiển thị một hình vuông và một hình tròn (dịch sang phải nhân 2):</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SplitScreenSceneExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle().shift(RIGHT * 2)
+        self.camera = SplitScreenCamera(self, square, circle)
+        self.add(square, circle)
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h2>8. Ví dụ từ Example Gallery và file PDF</h2>
+<h3>8.1. Ví dụ hình học đơn giản với Camera</h3>
+<h4>8.1.1. SquareToCircle</h4>
+<div class="content-block">
+    <p>Biến đổi một hình vuông thành hình tròn:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SquareToCircle(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle()
+        self.play(Create(square))
+        self.play(Transform(square, circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>8.2. Ví dụ công thức toán học với MovingCamera</h3>
+<h4>8.2.1. MathFormulaWithMovingCamera</h4>
+<div class="content-block">
+    <p>Hiển thị công thức toán học (tổng từ n=1 đến vô cực của 1/n^2 = π^2/6) và phóng to camera vào công thức:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class MathFormulaWithMovingCamera(MovingCameraScene):
+    def construct(self):
+        formula = MathTex(r"\sum_{n=1}^\infty \frac{1}{n^2} = \frac{\pi^2}{6}")
+        self.add(formula)
+        self.play(self.camera.frame.animate.scale(0.5).move_to(formula))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>8.3. Ví dụ hoạt hình phức tạp với ThreeDCamera</h3>
+<h4>8.3.1. Complex3DAnimation</h4>
+<div class="content-block">
+    <p>Hiển thị một hệ trục 3D và một hình cầu, sau đó xoay hình cầu một góc π:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class Complex3DAnimation(ThreeDScene):
+    def construct(self):
+        axes = ThreeDAxes()
+        sphere = Sphere(radius=1)
+        self.set_camera_orientation(phi=75 * DEGREES, theta=30 * DEGREES)
+        self.add(axes, sphere)
+        self.play(Rotate(sphere, angle=PI))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h3>8.4. Ví dụ từ file PDF với SplitScreenCamera</h3>
+<h4>8.4.1. SplitScreenFromPDFExample</h4>
+<div class="content-block">
+    <p>Chia màn hình để hiển thị một hình vuông và một hình tròn (dịch sang phải nhân 2), sau đó hiển thị mờ dần cả hai:</p>
+    <table>
+        <tr>
+            <td><pre><code class="language-python">from manim import *
+class SplitScreenFromPDFExample(Scene):
+    def construct(self):
+        square = Square()
+        circle = Circle().shift(RIGHT * 2)
+        self.camera = SplitScreenCamera(self, square, circle)
+        self.add(square, circle)
+        self.play(FadeIn(square), FadeIn(circle))
+        self.wait()</code></pre></td>
+        </tr>
+    </table>
+</div>
+
+<h2>9. Tối ưu hóa và xử lý lỗi</h2>
+<h3>9.1. Tối ưu thời gian render</h3>
+<div class="content-block">
+    <p>
+        - Sử dụng lệnh "manim render --low_quality" để render nhanh khi thử nghiệm.<br>
+        - Chỉ render chất lượng cao ("--format=mp4 --quality=1080p60") khi hoàn thiện.<br>
+        - Tắt các updater không cần thiết trong Scene để giảm tải.
+    </p>
+</div>
+
+<h3>9.2. Xử lý lỗi phổ biến</h3>
+<div class="content-block">
+    <p>
+        - Lỗi LaTeX không tìm thấy: Đảm bảo cài đặt MiKTeX và kiểm tra biến PATH.<br>
+        - Lỗi FFmpeg: Cài FFmpeg và thêm vào PATH.<br>
+        - Lỗi camera không hoạt động: Kiểm tra cấu hình camera trong Scene và đảm bảo phần cứng hỗ trợ.
+    </p>
+</div>
+
+<h2>10. Kết luận</h2>
+<div class="content-block">
+    <p>Tài liệu này bao quát toàn bộ các thành phần của Manim, từ Mobjects, Animations, Scenes, đến Cameras, với ví dụ thực tế từ Example Gallery và file PDF. Bạn có thể sử dụng tài liệu này để lập trình các hoạt hình kỹ thuật phức tạp một cách dễ dàng. Chúc bạn thành công với Manim!</p>
+</div>
+</div>
+</body>
+</html>
